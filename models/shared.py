@@ -48,17 +48,6 @@ def _cut_capsule(length: Length, width: Length, height: Length, origin: Point3) 
     )
 
 
-def _cut_box(length: Length, depth: Length, height: Length, origin: Point3) -> Any:
-    """Return a slightly oversized cutter box to avoid coplanar booleans."""
-    margin = CUT_MARGIN / 2
-    return box(
-        length + CUT_MARGIN,
-        depth + CUT_MARGIN,
-        height + CUT_MARGIN,
-        origin=(origin[0] - margin, origin[1] - margin, origin[2] - margin),
-    )
-
-
 @dataclass
 class ModelState:
     """The single mutable collection state shared by all model phases."""
