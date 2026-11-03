@@ -117,6 +117,37 @@ def test_opencode_ticket_runner_is_retired():
     assert (PROJECT_ROOT / ".makeitours" / "schema" / "git-opencode-run-v1.schema.json").is_file()
 
 
+OUTCOME_WORKFLOW = PROJECT_ROOT / ".github" / "workflows" / "makeitours-outcome.yml"
+
+
+def test_outcome_workflow_reports_each_downstream_result_from_the_same_runner_image():
+    """2026-10-30 (data-plane#249): after a push, one reply per change once CI, the release or
+    Pages finishes on main, from the same pinned runner image as the ticket workflow."""
+    text = OUTCOME_WORKFLOW.read_text()
+    image = RUNNER_IMAGE.search(text)
+    assert image, "the runner image must be pinned by sha256 digest"
+    ticket_image = RUNNER_IMAGE.search(MAKEITOURS_WORKFLOW.read_text())
+    assert ticket_image, "the ticket workflow's runner image must be pinned by sha256 digest"
+    assert image.group(0) == ticket_image.group(0)
+    assert "run: makeitours-agentic-git-run outcome" in text
+    assert "workflow_run:" in text and "types: [completed]" in text and "branches: [main]" in text
+    workflows = PROJECT_ROOT / ".github" / "workflows"
+    for name in ["ci.yml", "release-template.yml", "pages.yml"]:
+        name_line = re.search(r"^name: (.+)$", (workflows / name).read_text(), re.MULTILINE)
+        assert name_line, f"{name} has no name"
+        title = name_line.group(1).strip()
+        assert f'"{title}"' in text, f"{name} ({title}) is not watched"
+    assert "head_repository.full_name == github.repository" in text
+
+
+def test_outcome_workflow_permissions_are_bounded():
+    text = OUTCOME_WORKFLOW.read_text()
+    assert "contents: read" in text and "issues: write" in text and "actions: read" in text
+    assert "contents: write" not in text and "pull-requests" not in text and "write-all" not in text
+    # It reads results and comments; it never receives a model key.
+    assert "secrets." not in text
+
+
 def test_sister_repository_contract_parity():
     """A project's shared Git-triggered request contract files are byte-identical
     to the template commit it records (`.makeitours/template-release.json`).
