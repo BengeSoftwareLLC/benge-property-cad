@@ -2,7 +2,7 @@
 
 from python_cad_tools.units import FOOT, INCH, MM
 
-PROJECT_NAME = "Benge Property"
+PROJECT_NAME = "File Template"
 
 UPPER_DECK_WIDTH = 24.5 * FOOT
 UPPER_DECK_DEPTH = 16 * FOOT
