@@ -102,6 +102,42 @@ jobs:
             --verify-tag \
             --generate-notes
 
+      # 2026-11-04 (cad-tools-release-app-safety): every release asks makeitours-agentic to
+      # follow it (Hosted must be on the latest template, hosted_template_parity.py); one
+      # that changes python-cad-tools also asks makeitours-app (the Mac app bundles only the
+      # lock). Each opens or updates its pin-bump pull request. Only the template
+      # repository sends it; projects carry this workflow as infrastructure.
+      - name: Ask the pinning repositories to follow this release
+        if: github.repository == 'brandon-benge/file-template-cad'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FOLLOW_TOKEN: ${{ secrets.MAKEITOURS_FOLLOW_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          current="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["python_cad_tools"])' template-policy.json)"
+          previous_tag="$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 20 --json tagName --jq '.[].tagName' \
+            | grep -vxF "$TAG" | sort -V | tail -n 1)"
+          previous=""
+          if [ -n "$previous_tag" ]; then
+            gh release download "$previous_tag" --repo "$GITHUB_REPOSITORY" --pattern template-policy.json --output previous-policy.json
+            previous="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["python_cad_tools"])' previous-policy.json)"
+          fi
+          repositories="makeitours-agentic"
+          if [ "$current" = "$previous" ]; then
+            echo "python-cad-tools is still $current (as in $previous_tag); the Mac app need not follow."
+          else
+            repositories="makeitours-app makeitours-agentic"
+          fi
+          if [ -z "$FOLLOW_TOKEN" ]; then
+            echo "::warning::MAKEITOURS_FOLLOW_TOKEN is not set, so $repositories were not asked to follow $TAG."
+            exit 0
+          fi
+          for repository in $repositories; do
+            GH_TOKEN="$FOLLOW_TOKEN" gh api "repos/brandon-benge/$repository/dispatches" \
+              -f event_type=cad-template-release -f "client_payload[tag]=$TAG" -f "client_payload[python_cad_tools]=$current"
+            echo "Asked $repository to follow $TAG (python-cad-tools $previous -> $current)."
+          done
+
   # 2026-11-03: a release a MakeItOurs ticket dispatched reports its result to
   # makeitours-outcome.yml (a dispatched run fires no workflow_run event).
   ticket-report:

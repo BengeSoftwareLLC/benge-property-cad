@@ -440,3 +440,18 @@ def test_governance_boundary_check():
     """AGENTS.md enforces the tooling boundary."""
     text = (PROJECT_ROOT / "AGENTS.md").read_text()
     assert "site-packages" in text
+
+
+def test_python_cad_tools_release_asks_the_pinning_repositories_to_follow():
+    """2026-11-04 (cad-tools-release-app-safety): only the template repository asks
+    makeitours-agentic to follow every release (Hosted parity) and makeitours-app to follow
+    a python-cad-tools change; projects carry this workflow too and must never send it."""
+    release = (PROJECT_ROOT / ".github" / "workflows" / "release-template.yml").read_text()
+    step = release.split("- name: Ask the pinning repositories to follow this release", 1)[1]
+    assert "if: github.repository == 'brandon-benge/file-template-cad'" in step.split("run: |", 1)[0]
+    assert "secrets.MAKEITOURS_FOLLOW_TOKEN" in step
+    assert 'repositories="makeitours-agentic"' in step
+    assert (
+        'repositories="makeitours-app makeitours-agentic"' in step.split('if [ "$current" = "$previous" ]; then', 1)[1]
+    )
+    assert "event_type=cad-template-release" in step
