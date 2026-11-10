@@ -188,6 +188,9 @@ MATERIAL_REGISTRY: dict[tuple[str, Color], tuple[str, float | None]] = {
     ("stair", cfg.SKIRTING_COLOR): ("Framing Lumber", 500.0),
     ("stair", (0.95, 0.85, 0.10)): ("LED Step Light", 100.0),
     ("structure", (0.15, 0.15, 0.15)): ("Concrete Slab", 2400.0),
+    ("site", cfg.GARDEN_BED_CEDAR_COLOR): ("Cedar Lumber", 380.0),
+    ("site", cfg.GARDEN_BED_SOIL_COLOR): ("Garden Soil", 1300.0),
+    ("site", cfg.GARDEN_BED_PLANT_COLOR): ("Garden Planting", None),
 }
 
 _slug = slug

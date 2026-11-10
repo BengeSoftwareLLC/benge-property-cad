@@ -11,6 +11,7 @@ import config as cfg
 from models.builder import ModelBuilder
 from models.decks import add_decks
 from models.features import add_features
+from models.garden_bed import add_garden_bed
 from models.landscape import add_landscape
 from models.lighting import add_skirt_lights, add_stair_lights
 from models.play_accessories import add_play_accessories
@@ -241,6 +242,7 @@ def build_model(context: BuildContext) -> DesignModel:
     add_play_accessories(builder, cfg, swing_set_x, swing_set_platform_y, beam_y, platform_top_z, swing_set_id)
     shed_rock_bed_x, shed_rock_bed_width = add_shed(builder, cfg, cfg.SHED_X, cfg.SHED_Y)
     add_landscape(builder, cfg, cfg.SHED_X, cfg.SHED_Y, cfg.SHED_DEPTH, shed_rock_bed_x, shed_rock_bed_width)
+    add_garden_bed(builder, cfg)
     add_final_rails(
         builder,
         upper_stair_left_top,
